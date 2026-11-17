@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Numverif-Operation</title>
+<style>
+  :root{
+    --bg:#0d1017; --panel:#151a23; --panel2:#1b2130; --border:#28303f;
+    --text:#e7eef7; --muted:#8b98ab; --accent:#4f8cff; --accent2:#7c5cff; --danger:#ff5470;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    color:var(--text);
+    background:
+      radial-gradient(1100px 520px at 15% -10%, #1a2440 0%, transparent 60%),
+      radial-gradient(900px 500px at 95% 0%, #24183c 0%, transparent 55%),
+      var(--bg);
+    min-height:100vh; padding:30px 16px 140px;
+  }
+  .wrap{max-width:940px;margin:0 auto}
+  header{display:flex;align-items:center;gap:14px;margin-bottom:22px;flex-wrap:wrap}
+  .logo{
+    width:44px;height:44px;border-radius:12px;
+    background:linear-gradient(140deg,var(--accent),var(--accent2));
+    display:grid;place-items:center;font-weight:800;font-size:19px;color:#fff;
+    box-shadow:0 8px 24px rgba(79,140,255,.35);
+  }
+  h1{font-size:20px;margin:0;letter-spacing:.3px}
+  .sub{font-size:12.5px;color:var(--muted);margin-top:2px}
+  .stats{margin-left:auto;display:flex;gap:10px;font-size:12px}
+  .stat{background:var(--panel);border:1px solid var(--border);padding:7px 12px;border-radius:10px;color:var(--muted)}
+  .stat b{color:var(--text)}
+  .addbar{
+    display:flex;gap:10px;background:var(--panel);border:1px solid var(--border);
+    border-radius:16px;padding:12px;margin-bottom:8px;
+  }
+  .addbar input{
+    flex:1;min-width:0;background:var(--panel2);border:1px solid var(--border);
+    border-radius:11px;padding:12px 14px;color:var(--text);font-size:14.5px;outline:none;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    transition:border-color .18s, box-shadow .18s;
+  }
+  .addbar input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,140,255,.16)}
+  .addbar input::placeholder{color:#5d6a7e;font-family:inherit}
+  button{font-family:inherit;cursor:pointer;border:none;font-size:13.5px;font-weight:600}
+  .btn{
+    background:var(--panel2);color:var(--text);border:1px solid var(--border);
+    padding:11px 16px;border-radius:11px;transition:.16s;white-space:nowrap;
+  }
+  .btn:hover{background:#232b3c;border-color:#37415a}
+  .btn.primary{
+    background:linear-gradient(140deg,var(--accent),var(--accent2));
+    border:none;color:#fff;box-shadow:0 6px 20px rgba(79,140,255,.3);
+  }
+  .btn.primary:hover{filter:brightness(1.1)}
+  .btn.small{padding:8px 12px;font-size:12.5px;border-radius:9px}
+  .btn.danger{background:rgba(255,84,112,.12);border:1px solid rgba(255,84,112,.45);color:#ff8098}
+  .btn.danger:hover{background:rgba(255,84,112,.22)}
+  .btn:disabled{opacity:.55;cursor:not-allowed}
+  .hint{font-size:12px;color:var(--muted);margin:0 0 14px 4px;line-height:1.7}
+  .hint code{background:var(--panel2);padding:1px 6px;border-radius:5px;color:#9fb3cc;font-size:11.5px}
+  .toolbar{display:flex;justify-content:flex-end;gap:8px;margin-bottom:18px;flex-wrap:wrap}
+  .err{
+    font-size:12.5px;color:#ff8098;background:rgba(255,84,112,.1);
+    border:1px solid rgba(255,84,112,.35);padding:9px 12px;border-radius:10px;
+    margin-bottom:14px;display:none;
+  }
+  .err.show{display:block}
+  .listhead{
+    display:grid;grid-template-columns:1fr auto;gap:10px;
+    padding:0 16px 8px;font-size:11px;text-transform:uppercase;
+    letter-spacing:.9px;color:#61708a;font-weight:700;
+  }
+  .listhead .right{display:flex;gap:26px;padding-right:6px}
+  .list{display:flex;flex-direction:column;gap:9px}
+  .empty{
+    text-align:center;padding:46px 20px;color:var(--muted);font-size:13.5px;
+    background:var(--panel);border:1px dashed var(--border);border-radius:16px;
+  }
+  .item{
+    background:var(--panel);border:1px solid var(--border);border-radius:14px;
+    overflow:hidden;transition:border-color .18s, background .18s, box-shadow .18s;
+  }
+  .item:hover{border-color:#36415a}
+  .item.open{border-color:#3a4a6b;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+  .item.selected{border-color:rgba(255,84,112,.55);background:rgba(255,84,112,.06)}
+  .row{display:flex;align-items:center;gap:12px;padding:14px 16px}
+  .num{display:flex;align-items:center;gap:10px;flex:1;min-width:0;cursor:pointer;user-select:none}
+  .caret{color:#5c6b84;font-size:11px;transition:transform .2s;display:inline-block;width:10px}
+  .item.open .caret{transform:rotate(90deg);color:var(--accent)}
+  .num-text{
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:14.5px;letter-spacing:.4px;white-space:nowrap;overflow:hidden;
+    text-overflow:ellipsis;flex-shrink:0;
+  }
+  .num-name{
+    font-size:13px;font-weight:700;color:#8fb4ff;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    max-width:180px;flex-shrink:1;
+  }
+  @media(max-width:560px){.num-name{max-width:110px}}
+  .country{
+    font-size:11px;color:#8fa4c2;background:var(--panel2);
+    border:1px solid var(--border);padding:3px 9px;border-radius:20px;
+    white-space:nowrap;flex-shrink:0;
+  }
+  .badges{display:flex;align-items:center;gap:8px;flex-shrink:0}
+  .badge{
+    display:inline-flex;align-items:center;gap:3px;
+    background:var(--panel2);border:1px solid var(--border);
+    color:#9fb0c8;border-radius:9px;padding:6px 10px;font-size:12.5px;font-weight:700;
+  }
+  .tag-badge{color:#a78bfa;border-color:rgba(124,92,255,.35);background:rgba(124,92,255,.1)}
+  .tag-badge .cnt{color:#c9baff;font-size:11.5px}
+  .del-badge{cursor:pointer;color:#7d8aa0;font-size:13px;line-height:1;padding:7px 10px;transition:.16s}
+  .del-badge:hover{color:#ff8098;border-color:rgba(255,84,112,.5);background:rgba(255,84,112,.12)}
+  .del-badge.active{color:#fff;background:var(--danger);border-color:var(--danger)}
+  /* NEW: copy badge */
+  .copy-badge{
+    cursor:pointer;color:#7d8aa0;line-height:1;padding:7px 10px;transition:.16s;
+    display:inline-flex;align-items:center;justify-content:center;
+  }
+  .copy-badge svg{display:block}
+  .copy-badge:hover{color:#9dc0ff;border-color:rgba(79,140,255,.5);background:rgba(79,140,255,.12)}
+  .copy-badge:active{transform:scale(.93)}
+  .detail{display:none;border-top:1px solid var(--border);background:#121722}
+  .item.open .detail{display:block}
+  .detail-inner{padding:16px;display:flex;flex-direction:column;gap:16px}
+  .dgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:620px){.dgrid{grid-template-columns:1fr}}
+  .dlabel{font-size:10.5px;text-transform:uppercase;letter-spacing:1px;color:#63718a;font-weight:800;margin-bottom:7px}
+  .dvalue{font-size:13.5px;margin-bottom:9px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.5px}
+  .muted{color:#5f6d82;font-style:italic}
+  .code-chip{
+    background:rgba(79,140,255,.14);border:1px solid rgba(79,140,255,.4);
+    color:#9dc0ff;padding:2px 8px;border-radius:7px;font-size:11.5px;font-weight:700;
+    font-family:ui-monospace,monospace;
+  }
+  .check{
+    display:inline-flex;align-items:center;gap:8px;
+    font-size:12.5px;color:#9fb0c8;cursor:pointer;user-select:none;
+    background:var(--panel2);border:1px solid var(--border);
+    padding:7px 12px;border-radius:9px;transition:.16s;
+  }
+  .check:hover{border-color:#37415a;color:#c3d0e4}
+  .check input{accent-color:var(--accent);width:15px;height:15px;cursor:pointer;margin:0}
+  .tag-list{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px;min-height:4px}
+  .tag{
+    display:inline-flex;align-items:center;gap:6px;
+    background:rgba(124,92,255,.12);border:1px solid rgba(124,92,255,.35);
+    color:#c3b2ff;padding:5px 8px 5px 10px;border-radius:9px;font-size:12.5px;
+    font-family:ui-monospace,monospace;word-break:break-all;max-width:100%;
+  }
+  .tag button{background:none;border:none;color:#8f7fd0;font-size:15px;line-height:1;padding:0 1px;cursor:pointer;font-weight:700}
+  .tag button:hover{color:#ff8098}
+  .tag-add{display:flex;gap:8px}
+  .tag-input,.name-input{
+    flex:1;min-width:0;background:var(--panel2);border:1px solid var(--border);
+    border-radius:9px;padding:9px 12px;color:var(--text);font-size:13px;outline:none;
+    font-family:ui-monospace,monospace;transition:border-color .16s, box-shadow .16s;
+  }
+  .tag-input:focus{border-color:var(--accent2);box-shadow:0 0 0 3px rgba(124,92,255,.16)}
+  .name-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,140,255,.16)}
+  .tag-input::placeholder,.name-input::placeholder{color:#5d6a7e;font-family:inherit}
+  .row-end{
+    display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;
+    border-top:1px dashed var(--border);padding-top:14px;
+  }
+  .bulkbar{
+    position:fixed;left:50%;bottom:24px;transform:translate(-50%,160%);
+    display:flex;align-items:center;gap:18px;
+    background:var(--panel2);border:1px solid #37415a;border-radius:14px;
+    padding:12px 16px;box-shadow:0 16px 44px rgba(0,0,0,.6);
+    transition:transform .26s cubic-bezier(.2,.9,.3,1.2), opacity .2s;
+    opacity:0;z-index:60;
+  }
+  .bulkbar.show{transform:translate(-50%,0);opacity:1}
+  .bulkbar .txt{font-size:13px;color:var(--muted)}
+  .bulkbar .txt b{color:var(--text)}
+  .bulkbar .acts{display:flex;gap:9px}
+
+  /* NEW: toast */
+  .toast{
+    position:fixed;left:50%;bottom:96px;transform:translate(-50%,16px);
+    background:var(--panel2);border:1px solid #3a4660;color:var(--text);
+    padding:10px 16px;border-radius:11px;font-size:13px;font-weight:700;
+    box-shadow:0 14px 40px rgba(0,0,0,.55);
+    opacity:0;pointer-events:none;z-index:160;
+    transition:opacity .22s, transform .22s;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    letter-spacing:.3px;
+  }
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+
+  .modal-backdrop{
+    position:fixed;inset:0;background:rgba(5,8,14,.72);backdrop-filter:blur(5px);
+    display:none;align-items:center;justify-content:center;padding:20px;z-index:120;
+  }
+  .modal-backdrop.show{display:flex}
+  .modal{
+    width:100%;max-width:440px;background:var(--panel);border:1px solid #39435a;
+    border-radius:18px;padding:22px;box-shadow:0 24px 70px rgba(0,0,0,.7);
+    animation:pop .18s ease;
+  }
+  @keyframes pop{from{transform:scale(.94);opacity:0}to{transform:scale(1);opacity:1}}
+  .modal h3{margin:0 0 10px;font-size:16px;display:flex;align-items:center;gap:9px}
+  .modal h3 .warn{
+    width:26px;height:26px;border-radius:8px;display:grid;place-items:center;
+    background:rgba(255,84,112,.15);color:var(--danger);font-size:14px;flex-shrink:0;
+  }
+  .modal p{margin:0 0 16px;font-size:13.5px;color:#a9b6c8;line-height:1.6}
+  .modal p code{background:#10151e;padding:1px 6px;border-radius:5px;color:#9fb3cc;font-size:12px}
+  .modal .names{
+    display:block;margin-top:10px;font-family:ui-monospace,monospace;font-size:12.5px;
+    color:#c8d5e6;background:#10151e;border:1px solid var(--border);border-radius:10px;
+    padding:10px 12px;max-height:130px;overflow:auto;line-height:1.75;
+  }
+  .modal-actions{display:flex;justify-content:flex-end;gap:9px;flex-wrap:wrap}
+  .export-box{max-width:600px;max-height:90vh;overflow:auto}
+  .export-text{
+    width:100%;height:180px;resize:vertical;outline:none;
+    background:#10151e;border:1px solid var(--border);border-radius:10px;
+    padding:10px 12px;color:#c8d5e6;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:12px;line-height:1.55;
+  }
+  .export-text:focus{border-color:var(--accent)}
+
+  /* ---------- BatchNumber ---------- */
+  .batch-box{max-width:680px;max-height:92vh;overflow:auto}
+  .batch-text{
+    width:100%;height:170px;resize:vertical;outline:none;
+    background:#10151e;border:1px solid var(--border);border-radius:10px;
+    padding:11px 13px;color:var(--text);font-size:13px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    line-height:1.6;transition:border-color .16s, box-shadow .16s;
+  }
+  .batch-text:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,140,255,.16)}
+  .batch-text::placeholder{color:#5d6a7e}
+  .batch-preview{
+    margin-top:12px;padding:10px 12px;
+    background:#10151e;border:1px solid var(--border);border-radius:10px;
+    min-height:56px;max-height:190px;overflow:auto;font-size:12.5px;line-height:1.6;
+  }
+  .batch-count{color:#9fb0c8;margin-bottom:8px;font-size:12.5px}
+  .batch-count b{color:var(--text)}
+  .batch-count .badd{color:#31d07d}
+  .batch-count .bskip{color:#ff8098}
+  .batch-chips{display:flex;flex-wrap:wrap;gap:6px}
+  .batch-chip{
+    display:inline-block;padding:3px 9px;
+    background:rgba(79,140,255,.12);border:1px solid rgba(79,140,255,.35);
+    color:#c3d8ff;border-radius:7px;font-family:ui-monospace,monospace;
+    font-size:11.5px;white-space:nowrap;
+  }
+  .batch-chip.dup{
+    background:rgba(255,84,112,.1);border-color:rgba(255,84,112,.4);
+    color:#ffaab8;text-decoration:line-through;opacity:.75;
+  }
+  .batch-chip.more{background:var(--panel2);border-color:var(--border);color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">N</div>
+    <div>
+      <h1>Numverif-Operation</h1>
+      <div class="sub">Kelola nomor, tags, dan check info</div>
+    </div>
+    <div class="stats">
+      <div class="stat">Nomor: <b id="statNumbers">0</b></div>
+      <div class="stat">Tags: <b id="statTags">0</b></div>
+    </div>
+  </header>
+
+  <div class="addbar">
+    <input id="numberInput" type="text" autocomplete="off" spellcheck="false"
+           placeholder="+62 1234-1234-1234, nama (opsional)">
+    <button class="btn primary" id="addBtn">Add Number</button>
+  </div>
+  <p class="hint">
+    Format wajib diawali <code>+</code>. Deteksi kode negara berhenti pada spasi pertama —
+    contoh <code>+62 1234-1234-1234</code> → <b>Indonesia</b>.
+    Nama opsional <b>hanya</b> setelah koma: <code>+6285864415872, fajar</code>.
+    Huruf <b>tidak</b> diperbolehkan di bagian nomor.
+  </p>
+
+  <div class="toolbar">
+    <button class="btn" id="batchBtn">⋮⋮ BatchNumber</button>
+    <button class="btn" id="exportBtn">⬇ Export TXT</button>
+    <button class="btn" id="importBtn">⬆ Import TXT</button>
+    <input type="file" id="importFile" accept=".txt,text/plain" hidden>
+  </div>
+
+  <div class="err" id="errBox"></div>
+
+  <div class="listhead">
+    <div>Number</div>
+    <div class="right"><span>#</span><span>⧉</span><span>✕</span></div>
+  </div>
+
+  <div class="list" id="list"></div>
+</div>
+
+<div class="bulkbar" id="bulkbar">
+  <span class="txt"><b id="selCount">0</b> nomor dipilih</span>
+  <div class="acts">
+    <button class="btn small" id="clearSel">Batal</button>
+    <button class="btn small danger" id="deleteSel">Delete Number</button>
+  </div>
+</div>
+
+<!-- NEW: toast for copy feedback -->
+<div class="toast" id="toast">✓ Copied</div>
+
+<div class="modal-backdrop" id="modal">
+  <div class="modal">
+    <h3><span class="warn">!</span> <span id="modalTitleText">Konfirmasi</span></h3>
+    <p id="modalText"></p>
+    <div class="modal-actions">
+      <button class="btn" id="modalCancel">Batal</button>
+      <button class="btn danger" id="modalOk">Ya</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="exportModal">
+  <div class="modal export-box">
+    <h3>
+      <span class="warn" style="background:rgba(79,140,255,.15);color:#4f8cff">⬇</span>
+      Export TXT
+    </h3>
+    <p>
+      Klik <b>Download .txt</b>. Jika browser memblokir download,
+      gunakan <b>Copy</b> lalu simpan manual sebagai file <code>.txt</code>.
+    </p>
+    <textarea id="exportText" class="export-text" readonly spellcheck="false"></textarea>
+    <div class="modal-actions" style="margin-top:14px">
+      <button class="btn" id="exportClose">Tutup</button>
+      <button class="btn" id="exportCopy">Copy</button>
+      <button class="btn primary" id="exportDownload">Download .txt</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="batchModal">
+  <div class="modal batch-box">
+    <h3>
+      <span class="warn" style="background:rgba(79,140,255,.15);color:#4f8cff">⋮⋮</span>
+      BatchNumber
+    </h3>
+    <p>
+      Tempel banyak nomor sekaligus. Pisahkan dengan <b>titik</b>, <b>koma</b>,
+      <b>semicolon</b>, atau <b>baris baru</b>. Nama opsional setelah koma.
+      Contoh: <code>+62 85163606700, proton. +6285163605700, tatang.</code>
+    </p>
+    <textarea id="batchText" class="batch-text" spellcheck="false"
+              placeholder="+62 85163606700, proton. +6285163605700, tatang."></textarea>
+    <div class="batch-preview" id="batchPreview">
+      <span class="muted">Belum ada nomor terdeteksi.</span>
+    </div>
+    <div class="modal-actions" style="margin-top:14px">
+      <button class="btn" id="batchClose">Batal</button>
+      <button class="btn" id="batchClear">Clear</button>
+      <button class="btn primary" id="batchAdd" disabled>Add Nomor</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   Country calling codes
+   ========================================================= */
+const COUNTRY_CODES = {
+  "1":"United States / Canada","7":"Russia","20":"Egypt","27":"South Africa",
+  "30":"Greece","31":"Netherlands","32":"Belgium","33":"France","34":"Spain",
+  "36":"Hungary","39":"Italy","40":"Romania","41":"Switzerland","43":"Austria",
+  "44":"United Kingdom","45":"Denmark","46":"Sweden","47":"Norway","48":"Poland",
+  "49":"Germany","51":"Peru","52":"Mexico","53":"Cuba","54":"Argentina",
+  "55":"Brazil","56":"Chile","57":"Colombia","58":"Venezuela","60":"Malaysia",
+  "61":"Australia","62":"Indonesia","63":"Philippines","64":"New Zealand",
+  "65":"Singapore","66":"Thailand","81":"Japan","82":"South Korea","84":"Vietnam",
+  "86":"China","90":"Turkey","91":"India","92":"Pakistan","93":"Afghanistan",
+  "94":"Sri Lanka","95":"Myanmar","98":"Iran","211":"South Sudan","212":"Morocco",
+  "213":"Algeria","216":"Tunisia","218":"Libya","220":"Gambia","221":"Senegal",
+  "222":"Mauritania","223":"Mali","224":"Guinea","225":"Ivory Coast","226":"Burkina Faso",
+  "227":"Niger","228":"Togo","229":"Benin","230":"Mauritius","231":"Liberia",
+  "232":"Sierra Leone","233":"Ghana","234":"Nigeria","235":"Chad","236":"Central African Republic",
+  "237":"Cameroon","238":"Cape Verde","239":"Sao Tome and Principe","240":"Equatorial Guinea",
+  "241":"Gabon","242":"Congo","243":"DR Congo","244":"Angola","245":"Guinea-Bissau",
+  "246":"British Indian Ocean Territory","248":"Seychelles","249":"Sudan","250":"Rwanda",
+  "251":"Ethiopia","252":"Somalia","253":"Djibouti","254":"Kenya","255":"Tanzania",
+  "256":"Uganda","257":"Burundi","258":"Mozambique","260":"Zambia","261":"Madagascar",
+  "262":"Reunion","263":"Zimbabwe","264":"Namibia","265":"Malawi","266":"Lesotho",
+  "267":"Botswana","268":"Eswatini","269":"Comoros","290":"Saint Helena","291":"Eritrea",
+  "297":"Aruba","298":"Faroe Islands","299":"Greenland","350":"Gibraltar","351":"Portugal",
+  "352":"Luxembourg","353":"Ireland","354":"Iceland","355":"Albania","356":"Malta",
+  "357":"Cyprus","358":"Finland","359":"Bulgaria","370":"Lithuania","371":"Latvia",
+  "372":"Estonia","373":"Moldova","374":"Armenia","375":"Belarus","376":"Andorra",
+  "377":"Monaco","378":"San Marino","380":"Ukraine","381":"Serbia","382":"Montenegro",
+  "383":"Kosovo","385":"Croatia","386":"Slovenia","387":"Bosnia and Herzegovina",
+  "389":"North Macedonia","420":"Czech Republic","421":"Slovakia","423":"Liechtenstein",
+  "500":"Falkland Islands","501":"Belize","502":"Guatemala","503":"El Salvador",
+  "504":"Honduras","505":"Nicaragua","506":"Costa Rica","507":"Panama","508":"Saint Pierre and Miquelon",
+  "509":"Haiti","590":"Guadeloupe","591":"Bolivia","592":"Guyana","593":"Ecuador",
+  "594":"French Guiana","595":"Paraguay","596":"Martinique","597":"Suriname","598":"Uruguay",
+  "599":"Curacao","670":"East Timor","672":"Norfolk Island","673":"Brunei",
+  "674":"Nauru","675":"Papua New Guinea","676":"Tonga","677":"Solomon Islands",
+  "678":"Vanuatu","679":"Fiji","680":"Palau","681":"Wallis and Futuna","682":"Cook Islands",
+  "683":"Niue","685":"Samoa","686":"Kiribati","687":"New Caledonia","688":"Tuvalu",
+  "689":"French Polynesia","690":"Tokelau","691":"Micronesia","692":"Marshall Islands",
+  "850":"North Korea","852":"Hong Kong","853":"Macau","855":"Cambodia","856":"Laos",
+  "880":"Bangladesh","886":"Taiwan","960":"Maldives","961":"Lebanon","962":"Jordan",
+  "963":"Syria","964":"Iraq","965":"Kuwait","966":"Saudi Arabia","967":"Yemen",
+  "968":"Oman","970":"Palestine","971":"United Arab Emirates","972":"Israel",
+  "973":"Bahrain","974":"Qatar","975":"Bhutan","976":"Mongolia","977":"Nepal",
+  "992":"Tajikistan","993":"Turkmenistan","994":"Azerbaijan","995":"Georgia",
+  "996":"Kyrgyzstan","998":"Uzbekistan"
+};
+
+/* =========================================================
+   State
+   ========================================================= */
+const STORAGE_KEY = "numverif-operation-v1";
+const EXPORT_MAGIC = "NVOP1";
+let numbers = [];
+const expanded = new Set();
+const selected = new Set();
+let modalAction = null;
+let lastExportContent = "";
+let saveFailWarned = false;
+let toastTimer = null;
+
+const $ = (s) => document.querySelector(s);
+const listEl     = $("#list");
+const errBox     = $("#errBox");
+const bulkbar    = $("#bulkbar");
+const modal      = $("#modal");
+const exportModal= $("#exportModal");
+const batchModal = $("#batchModal");
+const fileInput  = $("#importFile");
+
+/* =========================================================
+   Utilities
+   ========================================================= */
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+
+function esc(s){
+  return String(s).replace(/[&<>"']/g, c => (
+    { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]
+  ));
+}
+
+function save(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(numbers));
+  }catch(e){
+    if(!saveFailWarned){
+      saveFailWarned = true;
+      showError("⚠ Data tidak bisa disimpan permanen di browser ini (storage penuh/diblokir). Data tetap ada selama tab terbuka.");
+    }
+  }
+}
+
+function load(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return;
+    const data = JSON.parse(raw);
+    if(!Array.isArray(data)) return;
+    numbers = [];
+    for(const n of data){
+      if(!n || typeof n !== "object") continue;
+      if(typeof n.raw !== "string" || !n.raw) continue;
+      numbers.push({
+        id: (typeof n.id === "string" && n.id) ? n.id : uid(),
+        raw: n.raw,
+        name: typeof n.name === "string" ? n.name : "",
+        code: typeof n.code === "string" ? n.code : "",
+        country: typeof n.country === "string" ? n.country : "Unknown",
+        tags: Array.isArray(n.tags) ? n.tags.filter(t => typeof t === "string") : [],
+        checkInfo: typeof n.checkInfo === "string" ? n.checkInfo : "",
+        showInfo: n.showInfo !== false
+      });
+    }
+  }catch(e){ numbers = []; }
+}
+
+function showError(msg){
+  errBox.textContent = msg;
+  errBox.classList.add("show");
+  clearTimeout(showError._t);
+  showError._t = setTimeout(() => errBox.classList.remove("show"), 4600);
+}
+
+/* NEW: toast feedback */
+function showToast(msg){
+  const t = $("#toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 1700);
+}
+
+/* NEW: clipboard helper with fallback */
+function copyToClipboard(text, successMsg){
+  const done = () => showToast(successMsg || "✓ Copied");
+
+  const manual = () => {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.top = "0";
+    ta.style.left = "-9999px";
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    let ok = false;
+    try{ ok = document.execCommand("copy"); }catch(e){ ok = false; }
+    ta.remove();
+    if(ok) done();
+    else showToast("Gagal menyalin — salin manual");
+  };
+
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done, manual);
+  }else{
+    manual();
+  }
+}
+
+/* =========================================================
+   Parsing nomor + nama + deteksi negara
+   ========================================================= */
+function parseNumber(input){
+  const raw = String(input).trim();
+  if(!raw) return { error: "Masukkan nomor terlebih dahulu." };
+
+  let numPart = raw, namePart = "";
+  const commaIdx = raw.indexOf(",");
+  if(commaIdx !== -1){
+    numPart = raw.slice(0, commaIdx).trim();
+    namePart = raw.slice(commaIdx + 1).trim();
+  }
+
+  if(!numPart) return { error: "Nomor tidak boleh kosong." };
+  if(!numPart.startsWith("+"))
+    return { error: 'Nomor harus diawali tanda "+". Contoh: +62 1234-1234-1234, nama' };
+
+  if(!/^\+[0-9 ()\-]+$/.test(numPart))
+    return { error: 'Bagian nomor hanya boleh berisi digit, spasi, "-", dan "()". Nama hanya boleh setelah koma ( , ).' };
+
+  const spaceIdx = numPart.search(/\s/);
+  const head = spaceIdx === -1 ? numPart : numPart.slice(0, spaceIdx);
+  const headDigits = head.replace(/[^\d]/g, "");
+  if(!headDigits) return { error: 'Tidak ada digit setelah tanda "+".' };
+
+  let match = null;
+  const maxLen = Math.min(headDigits.length, 3);
+  for(let len = maxLen; len >= 1; len--){
+    const code = headDigits.slice(0, len);
+    if(COUNTRY_CODES[code]){ match = { code, country: COUNTRY_CODES[code] }; break; }
+  }
+  if(!match) match = { code: headDigits.slice(0, 3), country: "Unknown" };
+
+  const allDigits = numPart.replace(/[^\d]/g, "");
+  if(allDigits.length <= match.code.length)
+    return { error: "Nomor tidak lengkap — hanya berisi kode negara. Tambahkan digit nomor setelah kode negara." };
+
+  return { raw: numPart, name: namePart, code: "+" + match.code, country: match.country };
+}
+
+function nowCheckInfo(){
+  const d = new Date();
+  const p = (x) => String(x).padStart(2, "0");
+  return `${p(d.getHours())}:${p(d.getMinutes())}-${p(d.getDate())}-${p(d.getMonth()+1)}-${d.getFullYear()}`;
+}
+
+/* =========================================================
+   BatchNumber parser
+   ========================================================= */
+const BATCH_RE = /\+\d[\d\s()\-]*(?:\s*,\s*[^.,+;\n]*[^.,+;\s\n])?(?=\s*(?:[.,+;\n]|$))/g;
+
+function parseBatch(text){
+  const out = [];
+  if(!text) return out;
+  BATCH_RE.lastIndex = 0;
+  let m;
+  while((m = BATCH_RE.exec(text)) !== null){
+    const full = m[0];
+    const ci = full.indexOf(",");
+    let rawStr, name = "";
+    if(ci !== -1){
+      rawStr = full.slice(0, ci).trim();
+      name   = full.slice(ci + 1).trim();
+    }else{
+      rawStr = full.trim();
+    }
+    if(!rawStr) continue;
+    const p = parseNumber(name ? `${rawStr}, ${name}` : rawStr);
+    if(p.error) continue;
+    out.push({ raw: p.raw, name: p.name, code: p.code, country: p.country });
+  }
+  return out;
+}
+
+/* =========================================================
+   Render
+   ========================================================= */
+function itemHTML(n){
+  const open = expanded.has(n.id);
+  const sel  = selected.has(n.id);
+
+  const tagChips = n.tags.length
+    ? n.tags.map(t => `<span class="tag">${esc(t)}<button data-act="rmtag" data-tag="${esc(t)}" title="Hapus tag">×</button></span>`).join("")
+    : `<span class="muted" style="font-size:12.5px">Belum ada tag</span>`;
+
+  const infoDisplay = n.showInfo
+    ? esc(n.checkInfo || "—")
+    : '<span class="muted">— disembunyikan —</span>';
+
+  /* SVG copy icon (two overlapping rectangles) */
+  const copyIcon = `
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+    </svg>`;
+
+  return `
+  <div class="item ${open ? "open" : ""} ${sel ? "selected" : ""}" data-id="${n.id}">
+    <div class="row">
+      <div class="num" data-act="toggle" title="Klik untuk melihat info">
+        <span class="caret">▶</span>
+        <span class="num-text">${esc(n.raw)}</span>
+        ${n.name ? `<span class="num-name">| ${esc(n.name)}</span>` : ""}
+        <span class="country">${esc(n.country)}</span>
+      </div>
+      <div class="badges">
+        <span class="badge tag-badge" title="Jumlah tags">#<span class="cnt">${n.tags.length}</span></span>
+        <button class="badge copy-badge" data-act="copy" title="Copy this number">${copyIcon}</button>
+        <button class="badge del-badge ${sel ? "active" : ""}" data-act="select"
+                title="Pilih nomor ini untuk dihapus">✕</button>
+      </div>
+    </div>
+
+    <div class="detail">
+      <div class="detail-inner">
+        <div class="dgrid">
+          <div>
+            <div class="dlabel">Country</div>
+            <div class="dvalue">
+              ${esc(n.country)}
+              <span class="code-chip">${esc(n.code)}</span>
+            </div>
+          </div>
+          <div>
+            <div class="dlabel">Check Info</div>
+            <div class="dvalue mono">${infoDisplay}</div>
+            <label class="check">
+              <input type="checkbox" data-act="toggleinfo" ${n.showInfo ? "checked" : ""}>
+              Show Info
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <div class="dlabel">Change Names</div>
+          <div class="tag-add">
+            <input class="name-input" type="text" autocomplete="off" spellcheck="false"
+                   placeholder="Nama untuk nomor ini…" value="${esc(n.name)}">
+            <button class="btn small" data-act="changename">Change Name</button>
+          </div>
+        </div>
+
+        <div>
+          <div class="dlabel">Tags (${n.tags.length})</div>
+          <div class="tag-list">${tagChips}</div>
+          <div class="tag-add">
+            <input class="tag-input" type="text" autocomplete="off" spellcheck="false"
+                   placeholder="Tulis tag lalu Enter — contoh: #penting">
+            <button class="btn small" data-act="addtag">Add Tags</button>
+          </div>
+        </div>
+
+        <div class="row-end">
+          <button class="btn small" data-act="copy">Copy this number</button>
+          <button class="btn danger small" data-act="delete">Delete Number</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function render(focusId){
+  if(!numbers.length){
+    listEl.innerHTML = `<div class="empty">Belum ada nomor.<br>Tambahkan nomor di kolom atas untuk memulai.</div>`;
+  }else{
+    listEl.innerHTML = numbers.map(itemHTML).join("");
+  }
+  updateStats();
+  updateBulkBar();
+  if(focusId){
+    const el = listEl.querySelector(`.item[data-id="${focusId}"] .tag-input`);
+    if(el) el.focus();
+  }
+}
+
+function updateStats(){
+  $("#statNumbers").textContent = numbers.length;
+  $("#statTags").textContent = numbers.reduce((a, n) => a + n.tags.length, 0);
+}
+
+function updateBulkBar(){
+  $("#selCount").textContent = selected.size;
+  bulkbar.classList.toggle("show", selected.size > 0);
+}
+
+/* =========================================================
+   Actions
+   ========================================================= */
+function toggleExpand(id){
+  if(expanded.has(id)) expanded.delete(id); else expanded.add(id);
+  render();
+}
+function toggleSelect(id){
+  if(selected.has(id)) selected.delete(id); else selected.add(id);
+  render();
+}
+function addTag(id, value){
+  let v = String(value).trim();
+  if(!v) return;
+  if(!v.startsWith("#")) v = "#" + v;
+  const n = numbers.find(x => x.id === id);
+  if(!n) return;
+  if(!n.tags.includes(v)) n.tags.push(v);
+  save();
+  render(id);
+}
+function removeTag(id, tag){
+  const n = numbers.find(x => x.id === id);
+  if(!n) return;
+  n.tags = n.tags.filter(t => t !== tag);
+  save();
+  render(id);
+}
+function changeName(id, value){
+  const n = numbers.find(x => x.id === id);
+  if(!n) return;
+  n.name = String(value).trim();
+  save();
+  render();
+}
+
+/* NEW: copy number (raw only) to clipboard */
+function copyNumber(id){
+  const n = numbers.find(x => x.id === id);
+  if(!n) return;
+  copyToClipboard(n.raw, "✓ Nomor disalin");
+}
+
+function addNumber(){
+  const input = $("#numberInput");
+  const res = parseNumber(input.value);
+  if(res.error){ showError(res.error); return; }
+  if(numbers.some(n => n.raw === res.raw)){
+    showError("Nomor ini sudah ada di list.");
+    return;
+  }
+  numbers.unshift({
+    id: uid(),
+    raw: res.raw,
+    name: res.name,
+    code: res.code,
+    country: res.country,
+    tags: [],
+    checkInfo: nowCheckInfo(),
+    showInfo: true
+  });
+  input.value = "";
+  input.focus();
+  errBox.classList.remove("show");
+  save();
+  render();
+}
+
+$("#addBtn").addEventListener("click", addNumber);
+$("#numberInput").addEventListener("keydown", e => { if(e.key === "Enter") addNumber(); });
+
+/* =========================================================
+   List delegation
+   ========================================================= */
+listEl.addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-act]");
+  if(!btn) return;
+  const item = btn.closest(".item");
+  if(!item) return;
+  const id = item.dataset.id;
+  const act = btn.dataset.act;
+
+  switch(act){
+    case "toggle": toggleExpand(id); break;
+    case "select": toggleSelect(id); break;
+    case "copy": copyNumber(id); break;
+    case "addtag": {
+      const inp = item.querySelector(".tag-input");
+      addTag(id, inp ? inp.value : "");
+      break;
+    }
+    case "rmtag": removeTag(id, btn.dataset.tag); break;
+    case "changename": {
+      const inp = item.querySelector(".name-input");
+      changeName(id, inp ? inp.value : "");
+      break;
+    }
+    case "delete": askDelete([id]); break;
+  }
+});
+
+listEl.addEventListener("change", (e) => {
+  if(!e.target.matches('[data-act="toggleinfo"]')) return;
+  const item = e.target.closest(".item");
+  if(!item) return;
+  const n = numbers.find(x => x.id === item.dataset.id);
+  if(!n) return;
+  n.showInfo = e.target.checked;
+  save();
+  render();
+});
+
+listEl.addEventListener("keydown", (e) => {
+  if(e.key !== "Enter") return;
+  const item = e.target.closest(".item");
+  if(!item) return;
+  if(e.target.classList.contains("tag-input")){
+    e.preventDefault();
+    addTag(item.dataset.id, e.target.value);
+  }else if(e.target.classList.contains("name-input")){
+    e.preventDefault();
+    changeName(item.dataset.id, e.target.value);
+  }
+});
+
+/* =========================================================
+   Delete (multi-select + confirm)
+   ========================================================= */
+function performDelete(ids){
+  const set = new Set(ids);
+  numbers = numbers.filter(n => !set.has(n.id));
+  ids.forEach(id => { selected.delete(id); expanded.delete(id); });
+  save();
+  render();
+}
+
+function askDelete(ids){
+  const valid = ids.filter(id => numbers.some(n => n.id === id));
+  if(!valid.length) return;
+  const names = valid.map(id => numbers.find(n => n.id === id).raw);
+  const shown = names.slice(0, 6).map(esc).join("<br>");
+  const more  = names.length > 6 ? `<br>… dan ${names.length - 6} nomor lainnya` : "";
+  openModal(
+    "Konfirmasi Hapus",
+    `Hapus <b>${valid.length}</b> nomor dari list?<br>
+     Seluruh tags &amp; check info yang menempel akan ikut terhapus permanen.
+     <span class="names">${shown}${more}</span>`,
+    "Ya, Hapus",
+    () => performDelete(valid)
+  );
+}
+
+$("#clearSel").addEventListener("click", () => { selected.clear(); render(); });
+$("#deleteSel").addEventListener("click", () => askDelete([...selected]));
+
+/* =========================================================
+   Modal helper
+   ========================================================= */
+function openModal(title, html, okText, onOk){
+  $("#modalTitleText").textContent = title;
+  $("#modalText").innerHTML = html;
+  $("#modalOk").textContent = okText;
+  modalAction = onOk;
+  modal.classList.add("show");
+}
+function closeModal(){
+  modalAction = null;
+  modal.classList.remove("show");
+}
+$("#modalCancel").addEventListener("click", closeModal);
+$("#modalOk").addEventListener("click", () => {
+  const fn = modalAction;
+  closeModal();
+  if(fn) fn();
+});
+modal.addEventListener("click", (e) => { if(e.target === modal) closeModal(); });
+
+/* =========================================================
+   BatchNumber
+   ========================================================= */
+function renderBatchPreview(){
+  const text = $("#batchText").value;
+  const items = parseBatch(text);
+  const preview = $("#batchPreview");
+  const addBtn = $("#batchAdd");
+
+  if(!items.length){
+    preview.innerHTML = `<span class="muted">Belum ada nomor terdeteksi.</span>`;
+    addBtn.disabled = true;
+    addBtn.textContent = "Add Nomor";
+    return;
+  }
+
+  const seen = new Set();
+  let dupCount = 0, newCount = 0;
+  const annotated = [];
+  for(const it of items){
+    const isDup = numbers.some(n => n.raw === it.raw) || seen.has(it.raw);
+    if(isDup) dupCount++;
+    else { newCount++; seen.add(it.raw); }
+    annotated.push({ it, isDup });
+  }
+
+  const chips = annotated.slice(0, 10).map(({it, isDup}) => {
+    const label = it.name ? `${it.raw} | ${it.name}` : it.raw;
+    return `<span class="batch-chip ${isDup ? "dup" : ""}">${esc(label)}</span>`;
+  }).join("");
+  const more = annotated.length > 10
+    ? `<span class="batch-chip more">+${annotated.length - 10} lagi</span>` : "";
+
+  preview.innerHTML =
+    `<div class="batch-count">` +
+      `<b class="badd">${newCount}</b> nomor baru` +
+      (dupCount ? ` &middot; <b class="bskip">${dupCount}</b> duplikat (dilewati)` : "") +
+    `</div>` +
+    `<div class="batch-chips">${chips}${more}</div>`;
+
+  addBtn.disabled = newCount === 0;
+  addBtn.textContent = `Add ${newCount} Nomor`;
+}
+
+function openBatchModal(){
+  $("#batchText").value = "";
+  renderBatchPreview();
+  batchModal.classList.add("show");
+  setTimeout(() => $("#batchText").focus(), 60);
+}
+
+function doBatchAdd(){
+  const items = parseBatch($("#batchText").value);
+  if(!items.length) return;
+
+  const seen = new Set();
+  let added = 0;
+
+  for(const it of items){
+    if(numbers.some(n => n.raw === it.raw) || seen.has(it.raw)) continue;
+    seen.add(it.raw);
+    numbers.unshift({
+      id: uid(),
+      raw: it.raw,
+      name: it.name,
+      code: it.code,
+      country: it.country,
+      tags: [],
+      checkInfo: nowCheckInfo(),
+      showInfo: true
+    });
+    added++;
+  }
+
+  save();
+  render();
+  batchModal.classList.remove("show");
+  if(added) showToast(`✓ ${added} nomor ditambahkan`);
+}
+
+$("#batchBtn").addEventListener("click", openBatchModal);
+$("#batchText").addEventListener("input", renderBatchPreview);
+$("#batchClose").addEventListener("click", () => batchModal.classList.remove("show"));
+$("#batchClear").addEventListener("click", () => {
+  $("#batchText").value = "";
+  renderBatchPreview();
+  $("#batchText").focus();
+});
+$("#batchAdd").addEventListener("click", doBatchAdd);
+batchModal.addEventListener("click", (e) => {
+  if(e.target === batchModal) batchModal.classList.remove("show");
+});
+
+document.addEventListener("keydown", (e) => {
+  if(e.key !== "Escape") return;
+  if(modal.classList.contains("show")) closeModal();
+  if(exportModal.classList.contains("show")) exportModal.classList.remove("show");
+  if(batchModal.classList.contains("show")) batchModal.classList.remove("show");
+});
+
+/* =========================================================
+   Export TXT
+   ========================================================= */
+function buildExportContent(){
+  const payload = {
+    i: numbers.map(n => {
+      const o = { n: n.raw };
+      if(n.name)        o.a = n.name;
+      if(n.tags.length) o.t = n.tags;
+      if(n.checkInfo)   o.d = n.checkInfo;
+      if(!n.showInfo)   o.s = 0;
+      return o;
+    })
+  };
+  return EXPORT_MAGIC + "\n" + JSON.stringify(payload);
+}
+
+function openExportModal(){
+  if(!numbers.length){ showError("Tidak ada nomor untuk di-export."); return; }
+  lastExportContent = buildExportContent();
+  $("#exportText").value = lastExportContent;
+  exportModal.classList.add("show");
+  $("#exportText").scrollTop = 0;
+}
+
+function downloadExport(){
+  if(!lastExportContent) return;
+  let ok = false;
+  try{
+    const blob = new Blob([lastExportContent], { type:"text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "numverif-operation.txt";
+    a.style.position = "fixed";
+    a.style.left = "-9999px";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 2000);
+    ok = true;
+  }catch(err){ ok = false; }
+  if(!ok) showError("Download diblokir browser ini — gunakan tombol Copy.");
+}
+
+function flashCopy(msg){
+  const b = $("#exportCopy");
+  if(b._t) clearTimeout(b._t);
+  if(!b._old) b._old = b.textContent;
+  b.textContent = msg;
+  b.classList.add("primary");
+  b._t = setTimeout(() => {
+    b.textContent = b._old;
+    b.classList.remove("primary");
+  }, 1500);
+}
+
+function copyExport(){
+  const ta = $("#exportText");
+  const done = () => flashCopy("✓ Copied");
+  const manual = () => {
+    ta.focus();
+    ta.select();
+    let ok = false;
+    try{ ok = document.execCommand("copy"); }catch(e){ ok = false; }
+    if(ok) done();
+    else {
+      const b = $("#exportCopy");
+      if(!b._old) b._old = b.textContent;
+      b.textContent = "Tekan Ctrl+C";
+      setTimeout(() => { b.textContent = b._old; }, 2600);
+    }
+  };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(lastExportContent).then(done, manual);
+  }else{
+    manual();
+  }
+}
+
+$("#exportBtn").addEventListener("click", openExportModal);
+$("#exportDownload").addEventListener("click", downloadExport);
+$("#exportCopy").addEventListener("click", copyExport);
+$("#exportClose").addEventListener("click", () => exportModal.classList.remove("show"));
+exportModal.addEventListener("click", (e) => {
+  if(e.target === exportModal) exportModal.classList.remove("show");
+});
+
+/* =========================================================
+   Import TXT — replaces entire table after confirmation
+   ========================================================= */
+function parseImport(text){
+  const lines = String(text).split(/\r?\n/);
+  if((lines[0] || "").trim() !== EXPORT_MAGIC)
+    return { error: "Format file tidak dikenali (header bukan NVOP1)." };
+
+  const jsonText = lines.slice(1).join("\n").trim();
+  let data;
+  try{ data = JSON.parse(jsonText); }
+  catch(err){ return { error: "File rusak: JSON tidak valid." }; }
+
+  if(!data || !Array.isArray(data.i))
+    return { error: "Struktur data tidak valid." };
+
+  const items = [];
+  for(const o of data.i){
+    if(!o || typeof o.n !== "string" || !o.n.startsWith("+")) continue;
+    const parsed = parseNumber(o.n);
+    let code = "", country = "Unknown";
+    if(!parsed.error){ code = parsed.code; country = parsed.country; }
+    items.push({
+      id: uid(),
+      raw: o.n,
+      name: typeof o.a === "string" ? o.a : "",
+      code, country,
+      tags: Array.isArray(o.t) ? o.t.filter(t => typeof t === "string") : [],
+      checkInfo: typeof o.d === "string" && o.d ? o.d : nowCheckInfo(),
+      showInfo: o.s !== 0
+    });
+  }
+
+  if(!items.length) return { error: "Tidak ada nomor valid di dalam file." };
+  return { items };
+}
+
+$("#importBtn").addEventListener("click", () => fileInput.click());
+
+fileInput.addEventListener("change", (e) => {
+  const file = e.target.files && e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const parsed = parseImport(reader.result);
+    fileInput.value = "";
+    if(parsed.error){ showError(parsed.error); return; }
+    openModal(
+      "Import TXT",
+      `Import <b>${parsed.items.length}</b> nomor.<br>
+       <b>Seluruh tabel saat ini (${numbers.length} nomor) akan diganti</b> —
+       data lama hilang tanpa terkecuali. Lanjutkan?`,
+      "Ya, Ganti",
+      () => {
+        numbers = parsed.items;
+        selected.clear();
+        expanded.clear();
+        save();
+        render();
+      }
+    );
+  };
+  reader.readAsText(file);
+});
+
+/* =========================================================
+   Start
+   ========================================================= */
+load();
+render();
+</script>
+</body>
+</html>
